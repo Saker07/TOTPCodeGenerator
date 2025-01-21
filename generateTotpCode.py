@@ -25,19 +25,21 @@ def main():
 
     
 
-def generateOTPFromTextSecret(secret: str, digits: int = None):
+def generateOTPFromTextSecret(secret: str, digits: int = None, counter: int = None):
   if(digits == None):
     digits = OTP_DIGITS
   secret = secret.encode("ascii")
-  counter = math.floor(time.time()/30).to_bytes(8, "big")
+  if(counter == None):
+    counter = math.floor(time.time()/30).to_bytes(8, "big")
   otpCode = generateOTP(secret, counter, digits)
   return ("{:0" + str(digits) +"d}").format(otpCode)
 
-def generateOTPFromBase32Secret(secret: str, digits: int = None):
+def generateOTPFromBase32Secret(secret: str, digits: int = None, counter: int = None):
   if(digits == None):
     digits = OTP_DIGITS
   secret = base64.b32decode(secret.encode("ascii"))
-  counter = math.floor(time.time()/30).to_bytes(8, "big")
+  if(counter == None):
+    counter = math.floor(time.time()/30).to_bytes(8, "big")
   otpCode = generateOTP(secret, counter, digits)
   return ("{:0" + str(digits) +"d}").format(otpCode)
 
@@ -48,7 +50,7 @@ def generateOTP(secret: bytes, counter: bytes, digits: int):
 def truncate(hashedBytes: bytes, digits: int):
   offset = int(hashedBytes[len(hashedBytes)-1]) & 15
   P = hashedBytes[offset:offset+4]
-  ((P[0] << 1) >> 1)
+  P = (P[0] & 127).to_bytes(1, "big") + P[1:4]
   P = int.from_bytes(P, "big", signed=False)
 
   return P % pow(10, digits)
